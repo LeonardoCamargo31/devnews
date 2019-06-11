@@ -26,5 +26,19 @@ UserSchema.pre('save', function (next) {
     })
 })
 
+//methods podemos adicionar alguns metodos adicionais
+UserSchema.methods.checkPassword = function (password) {//como vamos usar o contexto, não podemos usar arrow function
+    return new Promise((resolve, reject) => {
+        //comparar a senha informada com a do usuario
+        bcrypt.compare(password, this.password, (err, isMatch) => {
+            if(err){
+                reject(err)
+            }else{
+                resolve(isMatch)//isMatch retorna true ou false
+            }
+        })
+    })
+}
+
 const User = mongoose.model('User', UserSchema)
 module.exports = User
