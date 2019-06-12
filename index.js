@@ -9,6 +9,8 @@ const bodyParser = require('body-parser')
 const User = require('./models/user')
 const articlesRoutes = require('./routes/articles')
 const restrictedRoutes = require('./routes/restricted')
+const authRoutes = require('./routes/auth')
+const pagesRoutes = require('./routes/pages')
 
 //para o mongose usar as promise padrão do node
 mongoose.Promise = global.Promise
@@ -25,8 +27,12 @@ app.use(express.static(__dirname + '/public'))
 
 app.use(session({ secret: 'devnews' }))
 
-app.get('/', (req, res) => {
-    res.render('index')
+//middleware vai ser usado em toda requisição
+app.use((req,res,next)=>{
+    if ('user' in req.session) {//caso tenha user na minha session]
+        res.locals.user = req.session.user
+    }
+    next()
 })
 
 //criação de middleware para verificar se usuario está logado
@@ -37,24 +43,11 @@ app.use('/restrito', (req, res, next) => {
     //caso não tenha logado
     res.redirect('/login')
 })
+
 app.use('/restrito', restrictedRoutes)
 app.use('/noticias', articlesRoutes)
-
-app.get('/login', (req, res) => {
-    res.render('login')
-})
-app.post('/login', async (req, res) => {
-    const { username, password } = req.body
-    const user = await User.findOne({ username })
-    console.log(user)
-    const isValid = await user.checkPassword(password)
-    if(isValid){
-        req.session.user = user
-        res.redirect('/restrito/noticias')
-    }else{
-        res.redirect('/login')
-    }
-})
+app.use('/', authRoutes)
+app.use('/',pagesRoutes)
 
 //criação do usuario inicial
 const createInitialUser = async () => {
