@@ -7,6 +7,7 @@ const session = require('express-session')
 const bodyParser = require('body-parser')
 
 const User = require('./models/user')
+const Article = require('./models/article')
 const articlesRoutes = require('./routes/articles')
 const restrictedRoutes = require('./routes/restricted')
 const authRoutes = require('./routes/auth')
@@ -27,27 +28,13 @@ app.use(express.static(__dirname + '/public'))
 
 app.use(session({ secret: 'devnews' }))
 
-//middleware vai ser usado em toda requisição
-app.use((req,res,next)=>{
-    if ('user' in req.session) {//caso tenha user na minha session]
-        res.locals.user = req.session.user
-    }
-    next()
-})
 
-//criação de middleware para verificar se usuario está logado
-app.use('/restrito', (req, res, next) => {
-    if ('user' in req.session) {//caso tenha user na minha session
-        return next()
-    }
-    //caso não tenha logado
-    res.redirect('/login')
-})
+app.use('/', authRoutes)
+app.use('/',pagesRoutes)
 
 app.use('/restrito', restrictedRoutes)
 app.use('/noticias', articlesRoutes)
-app.use('/', authRoutes)
-app.use('/',pagesRoutes)
+
 
 //criação do usuario inicial
 const createInitialUser = async () => {
@@ -63,6 +50,25 @@ const createInitialUser = async () => {
         console.log('Criação de usuário inicial ignorada')
     }
 }
+
+const createArticle = async () => {
+    const article = new Article({
+        title:"Noticias publica "+new Date().getTime(),
+        content:'Content',
+        category:'public'
+    })
+    await article.save()
+
+    const articlePrivate = new Article({
+        title:"Noticias privada "+new Date().getTime(),
+        content:'Content',
+        category:'private'
+    })
+    await articlePrivate.save()
+}
+
+
+//createArticle()
 
 //conectando com o banco de dados
 mongoose.connect(mongo, { useNewUrlParser: true }).then(() => {
