@@ -13,6 +13,7 @@ const UserSchema = new mongoose.Schema({
         enum: ['restrito', 'admin']
     },
     facebookId:String,
+    googleId:String,
     name:String
 })
 

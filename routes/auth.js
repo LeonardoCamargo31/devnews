@@ -5,6 +5,7 @@ const User = require('../models/user')
 const passaport = require('passport')
 const LocalStrategy = require('passport-local').Strategy
 const FacebookStrategy = require('passport-facebook').Strategy
+const GoogleStrategy = require('passport-google-oauth').OAuth2Strategy
 
 //inicializar o passaport
 router.use(passaport.initialize())
@@ -46,6 +47,27 @@ passaport.use(new FacebookStrategy({
         const user = new User({
             name: profile.displayName,
             facebookId: profile.id,
+            roles: ['restrito']
+        })
+        await user.save()//salvo esse novo usuario
+        done(null, user)//retorno o usuario
+    } else {
+        done(null, userDB)
+    }
+}))
+
+//definindo a estrategia para login com google
+passaport.use(new GoogleStrategy({
+    clientID: '797785079913-f3go2l2k6ab955bgqup6lee6c0a2f43h.apps.googleusercontent.com',
+    clientSecret: 'G-k7Ke6TPyXYPsRLzh9ycBr0',
+    callbackURL: 'http://localhost:3000/google/callback',
+}, async (accessToken, refreshToken, error, profile, done) => {//quando ele logar chama esse callback
+    //checar se temos esse usuario
+    const userDB = await User.findOne({ googleId: profile.id })
+    if (!userDB) {//caso não exista esse usuario,iremos criar
+        const user = new User({
+            name: profile.displayName,
+            googleId: profile.id,
             roles: ['restrito']
         })
         await user.save()//salvo esse novo usuario
@@ -103,10 +125,18 @@ router.post('/login', passaport.authenticate('local', {
 //setando para usar nossa strategy facebook
 router.get('/facebook', passaport.authenticate('facebook'))
 //quando logar com facebook, vai para facebook, depois de logar ele nos devolve os dados do usuario
-router.get('/facebook/callback',passaport.authenticate('facebook',{
-    failureRedirect:'/'
-}),(req,res)=>{
+router.get('/facebook/callback', passaport.authenticate('facebook', {
+    failureRedirect: '/'
+}), (req, res) => {
     res.redirect('/')
 })
+
+
+//setando para usar nossa strategy google
+router.get('/google', passaport.authenticate('google', { scope: ['https://www.googleapis.com/auth/userinfo.profile'] }))
+router.get('/google/callback', passaport.authenticate('google', {
+    failureRedirect: '/',
+    successRedirect: '/',
+}))
 
 module.exports = router
