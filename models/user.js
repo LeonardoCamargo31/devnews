@@ -9,6 +9,10 @@ const UserSchema = new mongoose.Schema({
     password: {
         type: String,
         required: true
+    },
+    roles: {
+        type: [String],
+        enum: ['restrito', 'admin']
     }
 })
 
@@ -31,9 +35,9 @@ UserSchema.methods.checkPassword = function (password) {//como vamos usar o cont
     return new Promise((resolve, reject) => {
         //comparar a senha informada com a do usuario
         bcrypt.compare(password, this.password, (err, isMatch) => {
-            if(err){
+            if (err) {
                 reject(err)
-            }else{
+            } else {
                 resolve(isMatch)//isMatch retorna true ou false
             }
         })

@@ -5,11 +5,11 @@ const Article = require('../models/article')
 //criação de middleware para verificar se usuario está logado
 router.use((req, res, next) => {
     if ('user' in req.session) {//caso tenha user na minha session
-        if(req.session.user.roles.indexOf('restrito')>=0){
+        if(req.session.user.roles.indexOf('admin')>=0){//se existir admin dentro de role
             return next()
         }
         else{
-            //esta logado, mas não é restrito
+            //esta logado, mas não é admin
             res.redirect('/')
         }
     }
@@ -18,12 +18,12 @@ router.use((req, res, next) => {
 })
 
 router.get('/',(req,res)=>{
-    res.send('restrito')
+    res.send('admin')
 })
 
 router.get('/noticias', async (req,res)=>{
-    const articles = await Article.find({category:'private'})
-    res.render('articles/restricted',{
+    const articles = await Article.find()
+    res.render('articles/admin',{
         articles
     })
 })

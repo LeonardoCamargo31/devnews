@@ -10,6 +10,7 @@ const User = require('./models/user')
 const Article = require('./models/article')
 const articlesRoutes = require('./routes/articles')
 const restrictedRoutes = require('./routes/restricted')
+const adminRoutes = require('./routes/admin')
 const authRoutes = require('./routes/auth')
 const pagesRoutes = require('./routes/pages')
 
@@ -28,23 +29,31 @@ app.use(express.static(__dirname + '/public'))
 
 app.use(session({ secret: 'devnews' }))
 
-
 app.use('/', authRoutes)
 app.use('/',pagesRoutes)
 
 app.use('/restrito', restrictedRoutes)
 app.use('/noticias', articlesRoutes)
-
+app.use('/admin',adminRoutes)
 
 //criação do usuario inicial
 const createInitialUser = async () => {
-    const total = await User.count({ username: 'leonardocn' })
+    const total = await User.count({ username: 'user1' })
     if (total === 0) {
         const user = new User({
-            username: 'leonardocn',
-            password: '123'
+            username: 'user1',
+            password: '123',
+            roles:['restrito','admin']
         })
         await user.save()
+
+        const user2 = new User({
+            username: 'user2',
+            password: '123',
+            roles:['restrito']
+        })
+        await user2.save()
+
         console.log('Usuário inicial criado')
     } else {
         console.log('Criação de usuário inicial ignorada')
@@ -66,7 +75,6 @@ const createArticle = async () => {
     })
     await articlePrivate.save()
 }
-
 
 //createArticle()
 
