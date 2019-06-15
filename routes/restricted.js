@@ -4,8 +4,8 @@ const Article = require('../models/article')
 
 //criação de middleware para verificar se usuario está logado
 router.use((req, res, next) => {
-    if ('user' in req.session) {//caso tenha user na minha session
-        if(req.session.user.roles.indexOf('restrito')>=0){
+    if (req.isAuthenticated()) {
+        if(req.user.roles.indexOf('restrito')>=0){
             return next()
         }
         else{
